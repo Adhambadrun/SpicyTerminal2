@@ -353,8 +353,39 @@ function qualify(engineSegs) {
       return ineligible(leg + " has no usable time (????) — fix the paste or press AI FIX.");
     if (carriers.indexOf(al) < 0) carriers.push(al);
   }
-  if (carriers.length > 1)
+  
+  // If there are multiple carriers, check if we can book segments from a single supported airline
+  if (carriers.length > 1) {
+    // Find which supported carriers are present
+    var bookableCarriers = [];
+    for (i = 0; i < carriers.length; i++) {
+      if (BOOKABLE[carriers[i]]) {
+        bookableCarriers.push(carriers[i]);
+      }
+    }
+    
+    // If exactly one supported carrier is present, filter to only that carrier's segments
+    if (bookableCarriers.length === 1) {
+      var targetCarrier = bookableCarriers[0];
+      var filteredSegs = [];
+      for (i = 0; i < engineSegs.length; i++) {
+        if (String(engineSegs[i].airline || "").toUpperCase() === targetCarrier) {
+          filteredSegs.push(engineSegs[i]);
+        }
+      }
+      if (filteredSegs.length > 0) {
+        return { eligible: true, reason: "Booking " + targetCarrier + " segments only", carrier: targetCarrier, kind: KIND_OF[targetCarrier], 
+                 filteredSegs: filteredSegs };
+      }
+    }
+    
+    // If multiple supported carriers or no supported carriers, reject
+    if (bookableCarriers.length > 1) {
+      return ineligible("Mixed bookable airlines (" + bookableCarriers.join(" + ") + ") — one checkout can't book them.");
+    }
     return ineligible("Mixed airlines (" + carriers.join(" + ") + ") — one checkout can't book them.");
+  }
+  
   var c = carriers[0];
   if (!BOOKABLE[c])
     return ineligible(c + " isn't bookable here — checkout links support AA, DL, AS, UA, BA.");
@@ -539,13 +570,15 @@ var BUILDERS = { AA: aaMetaUrl, DL: deltaTripUrl, AS: alaskaUrl, UA: unitedUrl, 
 function linkFor(engineSegs, nowMs) {
   var q = qualify(engineSegs);
   if (!q.eligible) return q;
-  var segs = toLinkSegs(engineSegs, nowMs);
+  // Use filtered segments if available (for mixed airline cases)
+  var segsToUse = q.filteredSegs || engineSegs;
+  var segs = toLinkSegs(segsToUse, nowMs);
   if (!segs)
     return ineligible("Could not read this trip for linking — fix the paste or press AI FIX.");
   var url = BUILDERS[q.carrier](segs);
   if (!url)
     return ineligible("Could not build the " + q.carrier + " link for this trip.");
-  return { eligible: true, reason: "", carrier: q.carrier, kind: q.kind,
+  return { eligible: true, reason: q.reason || "", carrier: q.carrier, kind: q.kind,
            url: url, label: LABEL_OF[q.carrier], segs: segs };
 }
 
