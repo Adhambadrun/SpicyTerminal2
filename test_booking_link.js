@@ -134,8 +134,19 @@ function itenOf(url) {
 {
   const q = linkForPaste("1 AA 100 15NOV JFK LHR 700P 700A¥1 J 777 7.00 3459 N\n" +
                          "2 DL 1 16NOV LHR JFK 900A 1200P J 764 8.00 3459 N\nCABIN-BUSINESS");
-  assert(!q.eligible && /Mixed airlines \(AA \+ DL\)/.test(q.reason),
-         "mixed AA+DL is refused as unbookable in one checkout");
+  assert(!q.eligible && /Mixed bookable airlines \(AA \+ DL\)/.test(q.reason),
+         "mixed AA+DL (both bookable) is refused as unbookable in one checkout");
+}
+/* AA + non-bookable carrier should book AA segments only */
+{
+  const q = linkForPaste("1 AA 100 15NOV JFK LHR 700P 700A¥1 J 777 7.00 3459 N\n" +
+                         "2 AT 965 16NOV LHR JFK 900A 1200P J 788 8.00 3459 N\nCABIN-BUSINESS");
+  assert(q.eligible && q.carrier === "AA",
+         "mixed AA+AT (AT not bookable) is eligible and books AA segments only");
+  assert(/^https:\/\/www\.aa\.com\/goto\/metasearch\?/.test(q.url || ""),
+         "mixed AA+AT creates AA checkout link");
+  assert(itenOf(q.url).includes("#AA|100|J|JFK|LHR|"),
+         "mixed AA+AT AA link includes only the AA flight");
 }
 {
   const q = linkForPaste("AA 100 15NOV JFK LHR"); /* no clocks -> ???? */

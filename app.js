@@ -3026,7 +3026,7 @@ function refreshBookingLink() {
   try {
     if (q.eligible) {
       btn.classList.add("ready");
-      btn.title = q.label + " — click to open + copy";
+      btn.title = q.label + (q.reason ? " (" + q.reason + ")" : "") + " — click to open + copy";
     } else {
       btn.classList.remove("ready");
       btn.title = q.reason || "No bookable itinerary yet";
