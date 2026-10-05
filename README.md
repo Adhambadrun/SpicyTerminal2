@@ -72,10 +72,18 @@ hallucinations, no re-rolling the dice.
   failing.
 - **Text and PDF attachments**: `.txt`, `.eml`, `.csv`, `.json`, `.html`, `.ics`, and similar text exports are read instantly; PDFs are passed to AI only when the user explicitly supplies a Gemini key.
 - **Weekly report**: One-click weekly performance and enhancement reports sent to `adhambadraan@gmail.com` to improve and enhance the tool to the max. Each report covers one week (Monday 00:00 UTC → now), compares it with the previous week, and keeps a separate lifetime total — a closed week is archived, never mixed into the current one. A *conversion* is a result shown to the user: live re-renders while typing and AI replies the direct read beat are counted as neither.
-- **About, in one click**: the `About` link leads the status row (`About / Generate Api /
-  Weekly Report / Report a bug`) and opens a dialog that says what the engine does, what it
+- **About, in one click**: the `About` link leads the status row (`About / Booking Link /
+  Generate Api / Weekly Report / Report a bug`) and opens a dialog that says what the engine does, what it
   deliberately refuses to do, and who built it — no marketing, no fluff, `Esc` closes it and
   focus goes back where it was.
+- **Booking Link — the checkout button that lights itself green**: beside `About` sits a
+  `Booking Link` row link that turns the current converted itinerary into a direct airline
+  checkout link (AA metasearch, Delta trip summary, Alaska, United, BA — ported from
+  SpicyLinkGenerator and fed with engine segments, never re-typed). Every new result
+  re-checks eligibility: a bookable trip (one carrier in AA/DL/AS/UA/BA, every leg complete)
+  lights the button terminal-green; anything else (mixed airlines, an unbookable carrier, a
+  `????` clock) leaves it dim and its click says why. A click opens the checkout in a new
+  tab and copies the link — nothing else, no JSON, no extra screens.
 - **Terminal boot animation**: the workspace panes slide in with a quick scanline sweep, the
   ready indicator gently pulses, and the motion automatically turns off for reduced-motion users.
 - **Per-line glow bars**: both windows light up line by line — every visible line of INPUT
@@ -125,6 +133,7 @@ files and archives are never shipped.
 | `ocrad.js` | pure offline OCR engine bundled locally |
 | `app.js` | UI logic (offline image parser, auto-convert, AI mistake detector & self-learning) |
 | `spicy_engine.js` | the conversion engine |
+| `spicy_links.js` | booking-link engine: engine segments → direct airline checkout link (AA/DL/AS/UA/BA) + eligibility check |
 | `spicy_data.js` | airports / airlines / aircraft data |
 | `index_template.html` | page template |
 | `wordmark_alpha.png` | transparent-background wordmark (header + welcome) |
@@ -143,6 +152,7 @@ files and archives are never shipped.
 | `test_ai_fix_label.js` | the AI FIX label is on the button and in every user-facing hint, with no legacy name left in the chrome, and the id stays `btnAi` — `node test_ai_fix_label.js` |
 | `test_jro_kilimanjaro.js` | TK AMS–IST–JRO–IST–AMS GDS re-paste regression (2026-09-10 report): Kilimanjaro `JRO` overlay, glued `¥1` marker, `7M8` equipment, and unknown-code numbered table rows surviving instead of being mangled — `node test_jro_kilimanjaro.js` |
 | `test_weekly_report.js` | weekly-report counters: week rollover, what counts as a conversion, blocked pop-up — `node test_weekly_report.js` |
+| `test_booking_link.js` | booking-link eligibility + checkout URLs per carrier (AA/DL/AS/UA/BA), refusal reasons, date rollover, deterministic links — `node test_booking_link.js` |
 
 ## Privacy
 

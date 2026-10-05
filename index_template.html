@@ -161,6 +161,12 @@ button:focus-visible{outline:2px solid var(--green);outline-offset:3px}
 #report:hover,#genKey:hover,#btnWeeklyReport:hover,#btnAbout:hover{color:#8fa6b2}
 .linkbtn{color:#3e4f59;font-size:11px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;background:none;border:0;padding:0;font-family:var(--mono);font-weight:400;flex:none;white-space:nowrap;min-height:auto}
 #btnWeeklyReport{margin-right:12px}
+/* Booking Link — a quiet row link like its neighbours, until the current
+   trip is actually bookable: .ready (set by app.js on every conversion)
+   lights it terminal-green so eligibility reads at a glance. */
+#btnBookingLink:hover{color:#8fa6b2}
+#btnBookingLink.ready{color:#53d977;text-decoration-color:#53d977;text-shadow:0 0 9px rgba(83,217,119,.65)}
+#btnBookingLink.ready:hover{color:#b9f4cd;text-shadow:0 0 12px rgba(83,217,119,.9)}
 /* welcome — small card, app visible behind (translucent backdrop) */
 .welcome{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
 background:rgba(4,8,12,.35);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
@@ -286,6 +292,7 @@ padding:30px 34px 26px;text-align:center;width:320px;box-shadow:0 18px 60px rgba
 <div class="status">
   <span id="st">READY</span>
   <button id="btnAbout" class="linkbtn" type="button" aria-haspopup="dialog" aria-controls="aboutModal" title="What SpicyTerminal does, what it refuses to do, and who built it">About</button>
+  <button id="btnBookingLink" class="linkbtn" type="button" title="Direct airline checkout link — lights green when the current trip can be booked (AA, DL, AS, UA, BA)">Booking Link</button>
   <button id="genKey" class="linkbtn">Generate Api</button>
   <button id="btnWeeklyReport" class="linkbtn">Weekly Report</button>
   <button id="report" class="linkbtn">Report a bug</button>
@@ -422,6 +429,7 @@ padding:30px 34px 26px;text-align:center;width:320px;box-shadow:0 18px 60px rgba
 <script id="ocradSource" type="text/plain">__OCRAD_JS__</script>
 <script>__SPICY_DATA__</script>
 <script>__SPICY_ENGINE__</script>
+<script>__SPICY_LINKS__</script>
 <script>__APP_JS__</script>
 </body>
 </html>

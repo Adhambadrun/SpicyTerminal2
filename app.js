@@ -45,6 +45,9 @@ function setOut(text) {
   if (out.textContent === text) return;
   out.textContent = text;
   flashPane(outPane);
+  /* The booking check rides along only when the full page is loaded: unit
+     tests execute setOut() standalone, where this function is absent. */
+  if (typeof refreshBookingLink === "function") refreshBookingLink();
 }
 
 /* ---------- per-line glow bars ---------- */
@@ -2983,6 +2986,77 @@ if ($("aboutModal")) $("aboutModal").addEventListener("click", function (event) 
   if (event && event.target === this) closeAbout();   // click the dimmed page, not the card
 });
 /* ABOUT:END */
+
+/* BOOKING:BEGIN */
+/* Booking Link — the status-row button that turns the CURRENT converted
+   itinerary into a direct airline checkout link (SpicyLinks.linkFor, fed
+   with engine segments — never re-typed, never re-read from pixels).
+   refreshBookingLink() runs from setOut(), so EVERY new result re-checks
+   eligibility: bookable trips (single carrier in AA/DL/AS/UA/BA, every leg
+   complete) light the button green via .ready; anything else leaves it a
+   quiet row link whose click explains why. It must never throw — a link
+   check is decoration, and decoration must not break a conversion. */
+var lastBooking = { eligible: false, reason: "No itinerary — convert something first.",
+                    url: "", label: "", carrier: "", kind: "" };
+function refreshBookingLink() {
+  var btn = $("btnBookingLink");
+  var q = { eligible: false, reason: "No itinerary — convert something first.",
+            url: "", label: "", carrier: "", kind: "" };
+  try {
+    if (window.SpicyLinks && window.SpicyEngine && lastOut && / N(\n|$)/.test(lastOut)) {
+      var r = window.SpicyEngine.parse(lastOut);
+      var segs = r[0] || [], warns = r[1] || [];
+      var lost = false, i;
+      for (i = 0; i < warns.length; i++)
+        if (/NOT read/.test(warns[i])) { lost = true; break; }
+      if (lost && segs.length)
+        q = { eligible: false, reason: "Some rows weren't read — the link would book a different trip. Fix the paste or press AI FIX.",
+              url: "", label: "", carrier: "", kind: "" };
+      else
+        q = window.SpicyLinks.linkFor(segs);
+    } else if (lastOut) {
+      q.reason = "No itinerary to link — convert a trip first.";
+    }
+  } catch (e) {
+    q = { eligible: false, reason: "Booking check failed — convert again.",
+          url: "", label: "", carrier: "", kind: "" };
+  }
+  lastBooking = q;
+  if (!btn) return;
+  try {
+    if (q.eligible) {
+      btn.classList.add("ready");
+      btn.title = q.label + " — click to open + copy";
+    } else {
+      btn.classList.remove("ready");
+      btn.title = q.reason || "No bookable itinerary yet";
+    }
+  } catch (e) {}
+}
+if ($("btnBookingLink")) $("btnBookingLink").addEventListener("click", function () {
+  refreshBookingLink(); /* the pane may hold a result no repaint has checked */
+  if (!lastBooking.eligible) { setStatus(lastBooking.reason || "NOT BOOKABLE", true); return; }
+  var url = lastBooking.url, carrier = lastBooking.carrier;
+  function legacyCopy() {
+    var ta = document.createElement("textarea");
+    ta.value = url;
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    ta.remove();
+  }
+  function afterCopy() {
+    var w = null;
+    try { w = window.open(url, "_blank", "noopener,noreferrer"); } catch (e) { w = null; }
+    if (w) setStatus("BOOKING LINK OPENED ✓ (" + carrier + ") — also copied");
+    else setStatus("POP-UP BLOCKED — link copied, paste it in the browser", true);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(afterCopy, function () { legacyCopy(); afterCopy(); });
+  } else {
+    legacyCopy(); afterCopy();
+  }
+});
+/* BOOKING:END */
 
 /* ---------- UI events ---------- */
 $("btnAttach").addEventListener("click", function() { $("filePick").click(); });
